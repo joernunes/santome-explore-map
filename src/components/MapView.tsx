@@ -1,126 +1,150 @@
-import { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+import { useEffect } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { Location } from "./LocationCard";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
 
 interface MapViewProps {
   locations: Location[];
   onLocationClick: (location: Location) => void;
+  routeData?: {
+    coordinates: [number, number][];
+    distance: number;
+    duration: number;
+  } | null;
 }
 
-const MapView = ({ locations, onLocationClick }: MapViewProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState("");
-  const [tokenSubmitted, setTokenSubmitted] = useState(false);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+// Fix for default marker icons in Leaflet with Vite
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
+
+// Custom marker icons by category
+const createCustomIcon = (category: string) => {
+  const colors: Record<string, string> = {
+    Natureza: "#10b981",
+    Cultura: "#f59e0b",
+    Lazer: "#3b82f6",
+    Comércio: "#8b5cf6",
+    Gastronomia: "#ef4444",
+  };
+
+  const color = colors[category] || "#6b7280";
+
+  return L.divIcon({
+    className: "custom-marker-icon",
+    html: `
+      <div style="
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      ">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" fill="${color}" stroke="white" stroke-width="3"/>
+          <circle cx="16" cy="16" r="6" fill="white"/>
+        </svg>
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
+  });
+};
+
+// Component to auto-fit bounds when route changes
+const FitBounds = ({ routeData }: { routeData?: { coordinates: [number, number][] } | null }) => {
+  const map = useMap();
 
   useEffect(() => {
-    if (!mapContainer.current || !tokenSubmitted || !mapboxToken) return;
-
-    try {
-      // Initialize map
-      mapboxgl.accessToken = mapboxToken;
-
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/outdoors-v12",
-        center: [6.7273, 0.3302], // São Tomé and Príncipe coordinates
-        zoom: 10,
-        pitch: 45,
-      });
-
-      // Add navigation controls
-      map.current.addControl(
-        new mapboxgl.NavigationControl({
-          visualizePitch: true,
-        }),
-        "top-right"
-      );
-
-      // Add markers for locations
-      locations.forEach((location) => {
-        const el = document.createElement("div");
-        el.className = "custom-marker";
-        el.style.backgroundImage = `url(data:image/svg+xml;base64,${btoa(`
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="16" cy="16" r="14" fill="#10b981" stroke="white" stroke-width="3"/>
-            <circle cx="16" cy="16" r="6" fill="white"/>
-          </svg>
-        `)})`;
-        el.style.width = "32px";
-        el.style.height = "32px";
-        el.style.cursor = "pointer";
-
-        const marker = new mapboxgl.Marker(el)
-          .setLngLat([location.lng, location.lat])
-          .addTo(map.current!);
-
-        el.addEventListener("click", () => {
-          onLocationClick(location);
-        });
-
-        markersRef.current.push(marker);
-      });
-
-      // Cleanup
-      return () => {
-        markersRef.current.forEach((marker) => marker.remove());
-        markersRef.current = [];
-        map.current?.remove();
-      };
-    } catch (error) {
-      console.error("Erro ao inicializar mapa:", error);
+    if (routeData && routeData.coordinates.length > 0) {
+      const bounds = L.latLngBounds(routeData.coordinates.map(coord => [coord[1], coord[0]]));
+      map.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [locations, onLocationClick, tokenSubmitted, mapboxToken]);
+  }, [routeData, map]);
 
-  if (!tokenSubmitted) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-6 bg-background">
-        <div className="max-w-md w-full space-y-4">
-          <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg border border-border">
-            <AlertCircle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-            <div className="space-y-2 text-sm">
-              <p className="font-medium">Token Mapbox necessário</p>
-              <p className="text-muted-foreground">
-                Para visualizar o mapa interativo, você precisa de um token público do Mapbox.
-              </p>
-              <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                <li>Acesse <a href="https://mapbox.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">mapbox.com</a></li>
-                <li>Crie uma conta gratuita</li>
-                <li>Copie seu token público</li>
-                <li>Cole abaixo para continuar</li>
-              </ol>
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            <Input
-              type="text"
-              placeholder="pk.eyJ1Ijoi..."
-              value={mapboxToken}
-              onChange={(e) => setMapboxToken(e.target.value)}
-              className="font-mono text-sm"
-            />
-            <Button 
-              onClick={() => setTokenSubmitted(true)} 
-              disabled={!mapboxToken}
-              className="w-full"
-            >
-              Carregar Mapa
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  return null;
+};
 
+const MapView = ({ locations, onLocationClick, routeData }: MapViewProps) => {
   return (
     <div className="relative w-full h-full">
-      <div ref={mapContainer} className="absolute inset-0" />
+      <MapContainer
+        center={[0.3302, 6.7273]}
+        zoom={10}
+        className="absolute inset-0 z-0"
+        zoomControl={true}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {/* Location markers */}
+        {locations.map((location) => (
+          <Marker
+            key={location.id}
+            position={[location.lat, location.lng]}
+            icon={createCustomIcon(location.category)}
+            eventHandlers={{
+              click: () => onLocationClick(location),
+            }}
+          >
+            <Popup>
+              <div className="p-2 min-w-[200px]">
+                <h3 className="font-semibold text-sm mb-1">{location.name}</h3>
+                <p className="text-xs text-muted-foreground mb-2">{location.category}</p>
+                <p className="text-xs line-clamp-2">{location.description}</p>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+
+        {/* Route polyline */}
+        {routeData && routeData.coordinates.length > 0 && (
+          <>
+            <Polyline
+              positions={routeData.coordinates.map(coord => [coord[1], coord[0]] as [number, number])}
+              color="#3b82f6"
+              weight={4}
+              opacity={0.8}
+            />
+            {/* Start marker (green) */}
+            <Marker
+              position={[routeData.coordinates[0][1], routeData.coordinates[0][0]]}
+              icon={L.divIcon({
+                className: "route-marker",
+                html: `
+                  <div style="width: 20px; height: 20px; background: #10b981; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>
+                `,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10],
+              })}
+            />
+            {/* End marker (red) */}
+            <Marker
+              position={[
+                routeData.coordinates[routeData.coordinates.length - 1][1],
+                routeData.coordinates[routeData.coordinates.length - 1][0],
+              ]}
+              icon={L.divIcon({
+                className: "route-marker",
+                html: `
+                  <div style="width: 20px; height: 20px; background: #ef4444; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>
+                `,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10],
+              })}
+            />
+            <FitBounds routeData={routeData} />
+          </>
+        )}
+      </MapContainer>
     </div>
   );
 };

@@ -1,10 +1,11 @@
-import { Map, Compass, Heart, Info } from "lucide-react";
+import { Map, Compass, Heart, Info, Navigation } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 
 const BottomNav = () => {
   const navItems = [
     { icon: Map, label: "Mapa", path: "/" },
     { icon: Compass, label: "Explorar", path: "/explorar" },
+    { icon: Navigation, label: "Rotas", path: "/rotas" },
     { icon: Heart, label: "Favoritos", path: "/favoritos" },
     { icon: Info, label: "Sobre", path: "/sobre" },
   ];
