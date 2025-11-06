@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Location } from "./LocationCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Car, User, Bike, MapPin, Navigation, AlertCircle } from "lucide-react";
+import { Car, User, Bike, MapPin, Navigation } from "lucide-react";
 import { calculateRoute, formatDistance, formatDuration, TransportMode } from "@/lib/openrouteservice";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
@@ -21,7 +20,6 @@ const RouteCalculator = ({ locations, onRouteCalculated }: RouteCalculatorProps)
   const [origin, setOrigin] = useState<string>("");
   const [destination, setDestination] = useState<string>("");
   const [transportMode, setTransportMode] = useState<TransportMode>("driving-car");
-  const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ distance: number; duration: number } | null>(null);
   const { toast } = useToast();
@@ -31,15 +29,6 @@ const RouteCalculator = ({ locations, onRouteCalculated }: RouteCalculatorProps)
       toast({
         title: "Campos obrigatórios",
         description: "Selecione origem e destino",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!apiKey) {
-      toast({
-        title: "API Key necessária",
-        description: "Insira sua chave do OpenRouteService",
         variant: "destructive",
       });
       return;
@@ -55,8 +44,7 @@ const RouteCalculator = ({ locations, onRouteCalculated }: RouteCalculatorProps)
       const routeData = await calculateRoute(
         [originLocation.lng, originLocation.lat],
         [destinationLocation.lng, destinationLocation.lat],
-        transportMode,
-        apiKey
+        transportMode
       );
 
       setResult({
@@ -90,32 +78,6 @@ const RouteCalculator = ({ locations, onRouteCalculated }: RouteCalculatorProps)
 
   return (
     <div className="space-y-4">
-      {/* API Key Input */}
-      <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg border border-border">
-        <AlertCircle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-        <div className="space-y-2 text-sm flex-1">
-          <p className="font-medium">API Key do OpenRouteService</p>
-          <p className="text-muted-foreground text-xs">
-            Gratuita • 2000 rotas/dia •{" "}
-            <a
-              href="https://openrouteservice.org/dev/#/signup"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Criar conta
-            </a>
-          </p>
-          <Input
-            type="text"
-            placeholder="5b3ce3597851110001cf6248..."
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className="font-mono text-xs"
-          />
-        </div>
-      </div>
-
       {/* Origin and Destination */}
       <div className="grid grid-cols-1 gap-3">
         <div className="space-y-2">

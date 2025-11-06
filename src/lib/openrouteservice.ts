@@ -1,3 +1,6 @@
+// API Key for OpenRouteService
+const OPENROUTE_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImMwYjI4ZTQzNzgzODQ5Y2M5YmJkNzczNDNmZWVmOTdmIiwiaCI6Im11cm11cjY0In0=";
+
 interface RouteResponse {
   coordinates: [number, number][];
   distance: number; // in meters
@@ -9,8 +12,7 @@ export type TransportMode = "driving-car" | "foot-walking" | "cycling-regular";
 export async function calculateRoute(
   start: [number, number], // [lng, lat]
   end: [number, number], // [lng, lat]
-  mode: TransportMode,
-  apiKey: string
+  mode: TransportMode
 ): Promise<RouteResponse> {
   const url = `https://api.openrouteservice.org/v2/directions/${mode}`;
 
@@ -18,7 +20,7 @@ export async function calculateRoute(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: apiKey,
+      Authorization: OPENROUTE_API_KEY,
     },
     body: JSON.stringify({
       coordinates: [start, end],
