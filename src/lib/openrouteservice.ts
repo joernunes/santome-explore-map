@@ -24,6 +24,7 @@ export async function calculateRoute(
     },
     body: JSON.stringify({
       coordinates: [start, end],
+      radiuses: [-1, -1], // -1 = unlimited radius to find nearest routable point
     }),
   });
 
