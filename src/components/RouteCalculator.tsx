@@ -14,9 +14,10 @@ interface RouteCalculatorProps {
     distance: number;
     duration: number;
   }) => void;
+  onCurrentLocationChange?: (location: { lat: number; lng: number } | null) => void;
 }
 
-const RouteCalculator = ({ locations, onRouteCalculated }: RouteCalculatorProps) => {
+const RouteCalculator = ({ locations, onRouteCalculated, onCurrentLocationChange }: RouteCalculatorProps) => {
   const [origin, setOrigin] = useState<string>("");
   const [destination, setDestination] = useState<string>("");
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -42,7 +43,9 @@ const RouteCalculator = ({ locations, onRouteCalculated }: RouteCalculatorProps)
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setCurrentLocation({ lat: latitude, lng: longitude });
+        const location = { lat: latitude, lng: longitude };
+        setCurrentLocation(location);
+        onCurrentLocationChange?.(location);
         
         if (isOrigin) {
           setUseCurrentAsOrigin(true);

@@ -11,6 +11,7 @@ const Rotas = () => {
     distance: number;
     duration: number;
   } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -33,6 +34,7 @@ const Rotas = () => {
               <RouteCalculator
                 locations={locations}
                 onRouteCalculated={setRouteData}
+                onCurrentLocationChange={setUserLocation}
               />
             </div>
           </ScrollArea>
@@ -44,6 +46,7 @@ const Rotas = () => {
             locations={locations}
             onLocationClick={() => {}}
             routeData={routeData}
+            userLocation={userLocation}
           />
         </div>
       </div>

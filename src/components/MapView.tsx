@@ -12,6 +12,7 @@ interface MapViewProps {
     distance: number;
     duration: number;
   } | null;
+  userLocation?: { lat: number; lng: number } | null;
 }
 
 // Fix for default marker icons in Leaflet with Vite
@@ -71,7 +72,7 @@ const FitBounds = ({ routeData }: { routeData?: { coordinates: [number, number][
   return null;
 };
 
-const MapView = ({ locations, onLocationClick, routeData }: MapViewProps) => {
+const MapView = ({ locations, onLocationClick, routeData, userLocation }: MapViewProps) => {
   return (
     <div className="relative w-full h-full">
       <MapContainer
@@ -84,6 +85,51 @@ const MapView = ({ locations, onLocationClick, routeData }: MapViewProps) => {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        {/* User location marker */}
+        {userLocation && (
+          <Marker
+            position={[userLocation.lat, userLocation.lng]}
+            icon={L.divIcon({
+              className: "user-location-marker",
+              html: `
+                <div style="
+                  width: 24px;
+                  height: 24px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  position: relative;
+                ">
+                  <div style="
+                    width: 24px;
+                    height: 24px;
+                    background: #3b82f6;
+                    border: 4px solid white;
+                    border-radius: 50%;
+                    box-shadow: 0 0 0 2px #3b82f6, 0 2px 8px rgba(0,0,0,0.3);
+                    animation: pulse 2s infinite;
+                  "></div>
+                </div>
+                <style>
+                  @keyframes pulse {
+                    0%, 100% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.2); opacity: 0.8; }
+                  }
+                </style>
+              `,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12],
+            })}
+          >
+            <Popup>
+              <div className="p-2">
+                <h3 className="font-semibold text-sm">Sua Localização</h3>
+                <p className="text-xs text-muted-foreground">Localização atual</p>
+              </div>
+            </Popup>
+          </Marker>
+        )}
 
         {/* Location markers */}
         {locations.map((location) => (
