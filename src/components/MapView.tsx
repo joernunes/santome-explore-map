@@ -63,7 +63,7 @@ const FitBounds = ({ routeData }: { routeData?: { coordinates: [number, number][
   const map = useMap();
 
   useEffect(() => {
-    if (routeData && routeData.coordinates.length > 0) {
+    if (routeData?.coordinates && routeData.coordinates.length > 0) {
       const bounds = L.latLngBounds(routeData.coordinates.map(coord => [coord[1], coord[0]]));
       map.fitBounds(bounds, { padding: [50, 50] });
     }
@@ -152,7 +152,7 @@ const MapView = ({ locations, onLocationClick, routeData, userLocation }: MapVie
         ))}
 
         {/* Route polyline */}
-        {routeData && routeData.coordinates.length > 0 && (
+        {routeData?.coordinates && routeData.coordinates.length > 0 && (
           <>
             <Polyline
               positions={routeData.coordinates.map(coord => [coord[1], coord[0]] as [number, number])}
