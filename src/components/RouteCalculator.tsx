@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Location } from "./LocationCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,20 @@ interface RouteCalculatorProps {
     duration: number;
   }) => void;
   onCurrentLocationChange?: (location: { lat: number; lng: number } | null) => void;
+  initialDestination?: Location | null;
 }
 
-const RouteCalculator = ({ locations, onRouteCalculated, onCurrentLocationChange }: RouteCalculatorProps) => {
+const RouteCalculator = ({ locations, onRouteCalculated, onCurrentLocationChange, initialDestination }: RouteCalculatorProps) => {
   const [origin, setOrigin] = useState<string>("");
   const [destination, setDestination] = useState<string>("");
+
+  useEffect(() => {
+    if (initialDestination) {
+      setDestination(initialDestination.id);
+      setUseCurrentAsOrigin(false);
+      setUseCurrentAsDestination(false);
+    }
+  }, [initialDestination]);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [useCurrentAsOrigin, setUseCurrentAsOrigin] = useState(false);
   const [useCurrentAsDestination, setUseCurrentAsDestination] = useState(false);

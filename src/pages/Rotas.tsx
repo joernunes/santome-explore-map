@@ -1,17 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import RouteCalculator from "@/components/RouteCalculator";
 import MapView from "@/components/MapView";
 import { locations } from "@/data/locations";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Location } from "@/components/LocationCard";
 
 const Rotas = () => {
+  const location = useLocation();
   const [routeData, setRouteData] = useState<{
     coordinates: [number, number][];
     distance: number;
     duration: number;
   } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [initialDestination, setInitialDestination] = useState<Location | null>(null);
+
+  useEffect(() => {
+    if (location.state?.selectedDestination) {
+      setInitialDestination(location.state.selectedDestination);
+    }
+  }, [location.state]);
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -35,6 +45,7 @@ const Rotas = () => {
                 locations={locations}
                 onRouteCalculated={setRouteData}
                 onCurrentLocationChange={setUserLocation}
+                initialDestination={initialDestination}
               />
             </div>
           </ScrollArea>

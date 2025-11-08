@@ -1,6 +1,7 @@
 import { MapPin, Clock, Phone, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export interface Location {
   id: string;
@@ -21,6 +22,13 @@ interface LocationCardProps {
 }
 
 const LocationCard = ({ location, onClose }: LocationCardProps) => {
+  const navigate = useNavigate();
+
+  const handleGetDirections = () => {
+    navigate("/rotas", { state: { selectedDestination: location } });
+    onClose?.();
+  };
+
   return (
     <Card className="overflow-hidden animate-in slide-in-from-bottom duration-300">
       <div className="relative h-48 overflow-hidden">
@@ -65,7 +73,7 @@ const LocationCard = ({ location, onClose }: LocationCardProps) => {
         </div>
         
         <div className="flex gap-2 pt-2">
-          <Button size="sm" className="flex-1">
+          <Button size="sm" className="flex-1" onClick={handleGetDirections}>
             <MapPin className="w-4 h-4 mr-2" />
             Como chegar
           </Button>
