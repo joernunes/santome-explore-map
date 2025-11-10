@@ -27,7 +27,7 @@ interface CategoryFilterProps {
 
 const CategoryFilter = ({ selectedCategory, onCategoryChange }: CategoryFilterProps) => {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2 px-4 hide-scrollbar">
+    <div className="flex gap-2 overflow-x-auto hide-scrollbar">
       {categories.map((category) => {
         const isSelected = selectedCategory === category.id;
         return (
@@ -36,10 +36,14 @@ const CategoryFilter = ({ selectedCategory, onCategoryChange }: CategoryFilterPr
             variant={isSelected ? "default" : "outline"}
             size="sm"
             onClick={() => onCategoryChange(category.id)}
-            className="flex items-center gap-2 whitespace-nowrap shrink-0"
+            className={`flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 ${
+              isSelected 
+                ? "bg-white text-primary shadow-lg scale-105 border-white" 
+                : "bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30"
+            }`}
           >
             <category.icon className="w-4 h-4" />
-            {category.label}
+            <span className="font-medium">{category.label}</span>
           </Button>
         );
       })}
