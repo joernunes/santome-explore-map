@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Car, User, Bike, MapPin, Navigation, Locate } from "lucide-react";
 import { calculateRoute, formatDistance, formatDuration, TransportMode } from "@/lib/openrouteservice";
 import { useToast } from "@/hooks/use-toast";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface RouteCalculatorProps {
   locations: Location[];
@@ -155,12 +155,14 @@ const RouteCalculator = ({ locations, onRouteCalculated, onCurrentLocationChange
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Origin and Destination */}
-      <div className="grid grid-cols-1 gap-3">
-        <div className="space-y-2">
-          <label className="text-sm font-medium flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-green-500" />
+      <div className="grid grid-cols-1 gap-4">
+        <div className="space-y-2.5">
+          <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
+            <div className="w-6 h-6 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <MapPin className="w-3.5 h-3.5 text-green-500" />
+            </div>
             Origem
           </label>
           <div className="flex gap-2">
@@ -172,7 +174,7 @@ const RouteCalculator = ({ locations, onRouteCalculated, onCurrentLocationChange
               }}
               disabled={useCurrentAsOrigin}
             >
-              <SelectTrigger className="flex-1">
+              <SelectTrigger className="flex-1 h-12 border-2 rounded-xl">
                 <SelectValue placeholder={useCurrentAsOrigin ? "Localização atual" : "Selecione o ponto de partida"} />
               </SelectTrigger>
               <SelectContent>
@@ -189,21 +191,24 @@ const RouteCalculator = ({ locations, onRouteCalculated, onCurrentLocationChange
               onClick={() => getCurrentLocation(true)}
               disabled={gettingLocation}
               title="Usar minha localização"
+              className="h-12 w-12 border-2"
             >
-              <Locate className={`w-4 h-4 ${gettingLocation ? 'animate-pulse' : ''}`} />
+              <Locate className={`w-5 h-5 ${gettingLocation ? 'animate-pulse' : ''}`} />
             </Button>
           </div>
           {useCurrentAsOrigin && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Locate className="w-3 h-3" />
-              Usando sua localização atual
-            </p>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20">
+              <Locate className="w-4 h-4 text-primary" />
+              <p className="text-xs text-primary font-medium">Usando sua localização atual</p>
+            </div>
           )}
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium flex items-center gap-2">
-            <Navigation className="w-4 h-4 text-red-500" />
+        <div className="space-y-2.5">
+          <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
+            <div className="w-6 h-6 rounded-lg bg-red-500/10 flex items-center justify-center">
+              <Navigation className="w-3.5 h-3.5 text-red-500" />
+            </div>
             Destino
           </label>
           <div className="flex gap-2">
@@ -215,7 +220,7 @@ const RouteCalculator = ({ locations, onRouteCalculated, onCurrentLocationChange
               }}
               disabled={useCurrentAsDestination}
             >
-              <SelectTrigger className="flex-1">
+              <SelectTrigger className="flex-1 h-12 border-2 rounded-xl">
                 <SelectValue placeholder={useCurrentAsDestination ? "Localização atual" : "Selecione o destino"} />
               </SelectTrigger>
               <SelectContent>
@@ -232,59 +237,88 @@ const RouteCalculator = ({ locations, onRouteCalculated, onCurrentLocationChange
               onClick={() => getCurrentLocation(false)}
               disabled={gettingLocation}
               title="Usar minha localização"
+              className="h-12 w-12 border-2"
             >
-              <Locate className={`w-4 h-4 ${gettingLocation ? 'animate-pulse' : ''}`} />
+              <Locate className={`w-5 h-5 ${gettingLocation ? 'animate-pulse' : ''}`} />
             </Button>
           </div>
           {useCurrentAsDestination && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Locate className="w-3 h-3" />
-              Usando sua localização atual
-            </p>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary/10 border border-secondary/20">
+              <Locate className="w-4 h-4 text-secondary" />
+              <p className="text-xs text-secondary font-medium">Usando sua localização atual</p>
+            </div>
           )}
         </div>
       </div>
 
       {/* Transport Mode */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Modo de Transporte</label>
-        <div className="grid grid-cols-3 gap-2">
+      <div className="space-y-3">
+        <label className="text-sm font-semibold text-foreground">Modo de Transporte</label>
+        <div className="grid grid-cols-3 gap-3">
           {transportModes.map((mode) => (
             <Button
               key={mode.value}
               variant={transportMode === mode.value ? "default" : "outline"}
               onClick={() => setTransportMode(mode.value)}
-              className="flex flex-col items-center gap-1 h-auto py-3"
+              className={`flex flex-col items-center gap-2 h-auto py-4 border-2 transition-all duration-300 ${
+                transportMode === mode.value 
+                  ? "shadow-glow scale-105" 
+                  : "hover:scale-105 hover:border-primary/30"
+              }`}
             >
-              <mode.icon className="w-5 h-5" />
-              <span className="text-xs">{mode.label}</span>
+              <mode.icon className="w-6 h-6" />
+              <span className="text-xs font-medium">{mode.label}</span>
             </Button>
           ))}
         </div>
       </div>
 
       {/* Calculate Button */}
-      <Button onClick={handleCalculate} disabled={loading} className="w-full">
-        {loading ? "Calculando..." : "Calcular Rota"}
+      <Button 
+        onClick={handleCalculate} 
+        disabled={loading} 
+        size="lg"
+        className="w-full h-12 gradient-ocean shadow-glow text-base font-semibold"
+      >
+        {loading ? (
+          <>
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+            Calculando...
+          </>
+        ) : (
+          <>
+            <Navigation className="w-5 h-5 mr-2" />
+            Calcular Rota
+          </>
+        )}
       </Button>
 
       {/* Result */}
       {result && (
-        <Card className="p-4 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <p className="text-2xl font-bold text-foreground">
-                {formatDistance(result.distance)}
-              </p>
-              <p className="text-xs text-muted-foreground">Distância</p>
+        <Card className="border-0 shadow-elevated overflow-hidden animate-scale-in">
+          <div className="absolute inset-0 gradient-tropical opacity-5" />
+          <CardContent className="p-5 relative">
+            <div className="grid grid-cols-2 gap-5">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl gradient-tropical mx-auto mb-2 flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-white" />
+                </div>
+                <p className="text-2xl font-bold text-foreground mb-1">
+                  {formatDistance(result.distance)}
+                </p>
+                <p className="text-xs text-muted-foreground font-medium">Distância Total</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl gradient-ocean mx-auto mb-2 flex items-center justify-center">
+                  <Navigation className="w-6 h-6 text-white" />
+                </div>
+                <p className="text-2xl font-bold text-foreground mb-1">
+                  {formatDuration(result.duration)}
+                </p>
+                <p className="text-xs text-muted-foreground font-medium">Tempo Estimado</p>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">
-                {formatDuration(result.duration)}
-              </p>
-              <p className="text-xs text-muted-foreground">Tempo estimado</p>
-            </div>
-          </div>
+          </CardContent>
         </Card>
       )}
     </div>
