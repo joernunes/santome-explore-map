@@ -186,17 +186,73 @@ const MapView = ({ locations, onLocationClick, routeData, userLocation }: MapVie
                 lineJoin: "round",
               }}
             />
-            {/* Route direction markers (arrows along the path) */}
-            <Polyline
-              positions={routeData.coordinates.map(coord => [coord[1], coord[0]] as [number, number])}
-              pathOptions={{
-                color: "#ffffff",
-                weight: 2,
-                opacity: 0.7,
-                dashArray: "1, 20",
-                lineCap: "round",
-              }}
-            />
+            {/* Direction arrows along the route */}
+            {(() => {
+              const arrows = [];
+              const totalPoints = routeData.coordinates.length;
+              const arrowInterval = Math.max(Math.floor(totalPoints / 8), 1); // Show ~8 arrows along route
+              
+              for (let i = arrowInterval; i < totalPoints - arrowInterval; i += arrowInterval) {
+                const current = routeData.coordinates[i];
+                const next = routeData.coordinates[Math.min(i + 5, totalPoints - 1)];
+                
+                // Calculate bearing (angle) between current and next point
+                const lat1 = current[1] * Math.PI / 180;
+                const lat2 = next[1] * Math.PI / 180;
+                const dLng = (next[0] - current[0]) * Math.PI / 180;
+                
+                const y = Math.sin(dLng) * Math.cos(lat2);
+                const x = Math.cos(lat1) * Math.sin(lat2) - 
+                         Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+                const bearing = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+                
+                arrows.push(
+                  <Marker
+                    key={`arrow-${i}`}
+                    position={[current[1], current[0]]}
+                    icon={L.divIcon({
+                      className: "route-arrow",
+                      html: `
+                        <div style="
+                          width: 32px; 
+                          height: 32px; 
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          transform: rotate(${bearing}deg);
+                          animation: arrowPulse 2s ease-in-out infinite;
+                        ">
+                          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 4L12 20M12 4L6 10M12 4L18 10" 
+                              stroke="#14b8a6" 
+                              stroke-width="3" 
+                              stroke-linecap="round" 
+                              stroke-linejoin="round"
+                              filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))"
+                            />
+                          </svg>
+                        </div>
+                        <style>
+                          @keyframes arrowPulse {
+                            0%, 100% { 
+                              opacity: 0.7;
+                              transform: rotate(${bearing}deg) scale(1);
+                            }
+                            50% { 
+                              opacity: 1;
+                              transform: rotate(${bearing}deg) scale(1.2);
+                            }
+                          }
+                        </style>
+                      `,
+                      iconSize: [32, 32],
+                      iconAnchor: [16, 16],
+                    })}
+                  />
+                );
+              }
+              return arrows;
+            })()}
             {/* Start marker (green with icon) */}
             <Marker
               position={[routeData.coordinates[0][1], routeData.coordinates[0][0]]}
