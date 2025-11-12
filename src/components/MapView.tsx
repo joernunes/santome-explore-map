@@ -58,14 +58,28 @@ const createCustomIcon = (category: string) => {
   });
 };
 
-// Component to auto-fit bounds when route changes
-const FitBounds = ({ routeData }: { routeData?: { coordinates: [number, number][] } | null }) => {
+// Component to zoom to start point and show full route
+const RouteAnimator = ({ routeData }: { routeData?: { coordinates: [number, number][] } | null }) => {
   const map = useMap();
 
   useEffect(() => {
     if (routeData?.coordinates && routeData.coordinates.length > 0) {
-      const bounds = L.latLngBounds(routeData.coordinates.map(coord => [coord[1], coord[0]]));
-      map.fitBounds(bounds, { padding: [50, 50] });
+      // First, zoom to starting point
+      const startPoint: [number, number] = [routeData.coordinates[0][1], routeData.coordinates[0][0]];
+      map.setView(startPoint, 15, {
+        animate: true,
+        duration: 1
+      });
+
+      // After 1.5 seconds, fit to show the full route
+      setTimeout(() => {
+        const bounds = L.latLngBounds(routeData.coordinates.map(coord => [coord[1], coord[0]]));
+        map.fitBounds(bounds, { 
+          padding: [80, 80],
+          animate: true,
+          duration: 1.5
+        });
+      }, 1500);
     }
   }, [routeData, map]);
 
@@ -154,40 +168,103 @@ const MapView = ({ locations, onLocationClick, routeData, userLocation }: MapVie
         {/* Route polyline */}
         {routeData?.coordinates && routeData.coordinates.length > 0 && (
           <>
+            {/* Route shadow (darker line below) */}
             <Polyline
               positions={routeData.coordinates.map(coord => [coord[1], coord[0]] as [number, number])}
-              color="#3b82f6"
-              weight={4}
-              opacity={0.8}
+              color="#000000"
+              weight={8}
+              opacity={0.2}
             />
-            {/* Start marker (green) */}
+            {/* Main route line with gradient effect */}
+            <Polyline
+              positions={routeData.coordinates.map(coord => [coord[1], coord[0]] as [number, number])}
+              pathOptions={{
+                color: "#14b8a6",
+                weight: 6,
+                opacity: 0.9,
+                lineCap: "round",
+                lineJoin: "round",
+              }}
+            />
+            {/* Route direction markers (arrows along the path) */}
+            <Polyline
+              positions={routeData.coordinates.map(coord => [coord[1], coord[0]] as [number, number])}
+              pathOptions={{
+                color: "#ffffff",
+                weight: 2,
+                opacity: 0.7,
+                dashArray: "1, 20",
+                lineCap: "round",
+              }}
+            />
+            {/* Start marker (green with icon) */}
             <Marker
               position={[routeData.coordinates[0][1], routeData.coordinates[0][0]]}
               icon={L.divIcon({
-                className: "route-marker",
+                className: "route-marker-start",
                 html: `
-                  <div style="width: 20px; height: 20px; background: #10b981; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>
+                  <div style="
+                    width: 40px; 
+                    height: 40px; 
+                    background: linear-gradient(135deg, #10b981, #059669); 
+                    border: 4px solid white; 
+                    border-radius: 50%; 
+                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4), 0 2px 4px rgba(0,0,0,0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    color: white;
+                    font-size: 18px;
+                  ">A</div>
                 `,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10],
+                iconSize: [40, 40],
+                iconAnchor: [20, 20],
               })}
-            />
-            {/* End marker (red) */}
+            >
+              <Popup>
+                <div className="p-2">
+                  <h3 className="font-semibold text-sm text-green-600">Ponto de Partida</h3>
+                  <p className="text-xs text-muted-foreground">Início da rota</p>
+                </div>
+              </Popup>
+            </Marker>
+            {/* End marker (red with icon) */}
             <Marker
               position={[
                 routeData.coordinates[routeData.coordinates.length - 1][1],
                 routeData.coordinates[routeData.coordinates.length - 1][0],
               ]}
               icon={L.divIcon({
-                className: "route-marker",
+                className: "route-marker-end",
                 html: `
-                  <div style="width: 20px; height: 20px; background: #ef4444; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>
+                  <div style="
+                    width: 40px; 
+                    height: 40px; 
+                    background: linear-gradient(135deg, #ef4444, #dc2626); 
+                    border: 4px solid white; 
+                    border-radius: 50%; 
+                    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4), 0 2px 4px rgba(0,0,0,0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    color: white;
+                    font-size: 18px;
+                  ">B</div>
                 `,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10],
+                iconSize: [40, 40],
+                iconAnchor: [20, 20],
               })}
-            />
-            <FitBounds routeData={routeData} />
+            >
+              <Popup>
+                <div className="p-2">
+                  <h3 className="font-semibold text-sm text-red-600">Destino</h3>
+                  <p className="text-xs text-muted-foreground">Fim da rota</p>
+                </div>
+              </Popup>
+            </Marker>
+            <RouteAnimator routeData={routeData} />
           </>
         )}
       </MapContainer>
